@@ -1,0 +1,101 @@
+:root {
+    --bs-primary: #0b6e6e;
+    --bs-primary-rgb: 11, 110, 110;
+    --bs-link-color: #0b6e6e;
+    --bs-link-hover-color: #085050;
+    --bs-danger: #b42318;
+    --bs-danger-rgb: 180, 35, 24;
+}
+
+[data-bs-theme="dark"] {
+    --bs-primary: #179b9b;
+    --bs-primary-rgb: 23, 155, 155;
+    --bs-link-color: #2ec4c4;
+    --bs-link-hover-color: #4ed5d5;
+    --bs-danger: #e0483c;
+    --bs-danger-rgb: 224, 72, 60;
+}
+
+/* Tombol Primary Kustom */
+.btn-primary {
+    --bs-btn-bg: var(--bs-primary);
+    --bs-btn-border-color: var(--bs-primary);
+    --bs-btn-hover-bg: #085252;
+    --bs-btn-hover-border-color: #085252;
+    --bs-btn-active-bg: #064040;
+    --bs-btn-active-border-color: #064040;
+}
+
+[data-bs-theme="dark"] .btn-primary {
+    --bs-btn-bg: var(--bs-primary);
+    --bs-btn-border-color: var(--bs-primary);
+    --bs-btn-hover-bg: #138383;
+    --bs-btn-hover-border-color: #138383;
+    --bs-btn-color: #ffffff;
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--bs-primary);
+    --bs-btn-border-color: var(--bs-primary);
+    --bs-btn-hover-bg: var(--bs-primary);
+    --bs-btn-hover-border-color: var(--bs-primary);
+    --bs-btn-active-bg: var(--bs-primary);
+    --bs-btn-active-border-color: var(--bs-primary);
+}
+
+/* Nav Pills Kustom */
+.nav-pills .nav-link.active {
+    background-color: var(--bs-primary);
+}
+
+/* Aksen Baris & Kartu Tiket Terlambat */
+.table-late {
+    background-color: rgba(180, 35, 24, 0.05) !important;
+    border-left: 4px solid var(--bs-danger) !important;
+}
+
+.card-late {
+    border-left: 4px solid var(--bs-danger) !important;
+}
+
+[data-bs-theme="dark"] .table-late {
+    background-color: rgba(224, 72, 60, 0.12) !important;
+}
+
+/* Aksesibilitas Fokus Keyboard */
+:focus-visible {
+    outline: 2px solid var(--bs-primary) !important;
+    outline-offset: 2px !important;
+}
+
+/* Lampiran Thumbnail */
+.attachment-thumb {
+    width: 54px;
+    height: 54px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--bs-border-color);
+}
+
+.attachment-badge-pdf {
+    width: 54px;
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(180, 35, 24, 0.1);
+    color: var(--bs-danger);
+    font-weight: 700;
+    border-radius: 6px;
+    border: 1px solid rgba(180, 35, 24, 0.2);
+}
+
+/* Hormati Preferensi Animasi Berkurang */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

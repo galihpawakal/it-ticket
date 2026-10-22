@@ -9,7 +9,7 @@ Terdiri dari **halaman web**, **REST API**, dan **proses otomatis terjadwal**. Z
 |---|---|
 | Bahasa / runtime | PHP **8.3+** |
 | Framework | **Laravel 13** (skeleton resmi `laravel/laravel`) |
-| Tampilan | **Blade** + CSS biasa (inline di layout, tanpa Node/Vite/npm) |
+| Tampilan | **Bootstrap 5.3.3** + Blade Components Global + CSS pelengkap (tanpa build step / npm) |
 | Database | **MySQL 8** (MariaDB 10.6+ juga seharusnya bisa) |
 | Penyimpanan File | Private disk (`storage/app/private`), diakses via rute terproteksi |
 | REST API | Laravel API routes + API Resource + autentikasi **API key** (header `X-API-Key`) |
@@ -215,6 +215,72 @@ Test suite Feature (PHPUnit 12, SQLite in-memory) mencakup:
   - Tiket baru dengan due_at masa depan → `is_overdue = false` dan filter API `?overdue=true|false` akurat.
 - **`TicketAttachmentTest`:** pengujian upload PDF/foto (JPG, PNG, WebP, GIF), batas 5 file, batas 5 MB, rute proteksi, dan pembersihan file fisik.
 - **`TicketApiTest` & `TicketWebTest`:** pengujian endpoint REST API dan halaman web Blade.
+
+---
+
+## Komponen UI & Desain Tampilan
+
+Aplikasi menggunakan **Bootstrap 5.3.3** yang dimuat melalui CDN jsDelivr dengan Subresource Integrity (SRI), dilengkapi dukungan Dark Mode (`data-bs-theme`) dan palet warna kustom via `public/css/app.css` (aksen teal `#0b6e6e` & merah kustom `#b42318`). Seluruh view Blade telah dimodernisasi menggunakan **Blade Components global** tanpa build step (Vite/Node/npm).
+
+### Cara Memuat Bootstrap: CDN vs. Lokal
+
+#### 1. Pilihan Default: CDN jsDelivr (Aktif Saat Ini)
+Secara default, aset Bootstrap 5.3.3 dipin dengan hash Subresource Integrity (SRI) dan `crossorigin="anonymous"` di [app.blade.php](file:///c:/Users/imanv/OneDrive/Documents/kantor/it%20ticket/resources/views/components/layouts/app.blade.php):
+- **CSS:**
+  ```html
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  ```
+- **JS Bundle (Termasuk Popper):**
+  ```html
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  ```
+*Alasan memilih CDN sebagai default:* Setup instan tanpa mengotori repositori git dengan binary/vendor, browser caching yang cepat dan terdistribusi secara global, serta perlindungan integritas berkas via SRI.
+
+#### 2. Opsi Offline: Mengunduh ke `public/vendor/bootstrap/`
+Jika aplikasi digunakan pada intranet atau kantor tanpa akses internet publik:
+1. Unduh `bootstrap.min.css` dan `bootstrap.bundle.min.js` versi 5.3.3 dari situs resmi Bootstrap.
+2. Letakkan berkas di folder proyek:
+   ```
+   public/vendor/bootstrap/
+     ├── css/bootstrap.min.css
+     └── js/bootstrap.bundle.min.js
+   ```
+3. Ubah referensi di [resources/views/components/layouts/app.blade.php](file:///c:/Users/imanv/OneDrive/Documents/kantor/it%20ticket/resources/views/components/layouts/app.blade.php):
+   ```html
+   <!-- Ganti link CDN CSS dengan: -->
+   <link rel="stylesheet" href="{{ asset('vendor/bootstrap/css/bootstrap.min.css') }}">
+
+   <!-- Ganti script CDN JS dengan: -->
+   <script src="{{ asset('vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+   ```
+
+---
+
+### Daftar Blade Components
+
+Semua komponen terletak di `resources/views/components/` sebagai anonymous components yang menggabungkan class Bootstrap via `$attributes->merge()`:
+
+| Komponen | Tag Blade | Props Utama | Contoh Pemakaian |
+|---|---|---|---|
+| **Layout Utama** | `<x-layouts.app>` | `title` | `<x-layouts.app title="Daftar Tiket">...</x-layouts.app>` |
+| **Page Header** | `<x-page-header>` | `title`, `description` | `<x-page-header title="Tiket #1"><x-slot:actions><x-button .../></x-slot></x-page-header>` |
+| **Kartu Konten** | `<x-card>` | `title`, `class` | `<x-card title="Informasi Tiket">isi konten</x-card>` |
+| **Tombol / Link** | `<x-button>` | `variant` (primary/secondary/danger/outline-primary/outline-secondary/outline-danger), `size` (sm/md/lg), `href`, `disabled`, `type` | `<x-button variant="primary" href="{{ route('tickets.create') }}">Buat Tiket</x-button>` |
+| **Badge Umum** | `<x-badge>` | `variant` (primary/secondary/success/warning/danger/info/teal), `pill` (bool) | `<x-badge variant="teal">Label</x-badge>` |
+| **Badge Status** | `<x-status-badge>` | `:status` (instance `TicketStatus` atau string 'open'/'in_progress'/'done') | `<x-status-badge :status="$ticket->status" />` |
+| **Badge Prioritas** | `<x-priority-badge>` | `:priority` (instance `TicketPriority` atau string 'low'/'medium'/'high') | `<x-priority-badge :priority="$ticket->priority" />` |
+| **Badge Terlambat** | `<x-overdue-badge>` | - | `<x-overdue-badge />` (menampilkan label teks "Terlambat") |
+| **Alert / Notifikasi** | `<x-alert>` | `type` (success/danger/warning/info), `dismissible` (bool) | `<x-alert type="success">Tiket berhasil disimpan!</x-alert>` |
+| **Form Field Wrapper** | `<x-form.field>` | `name`, `label`, `required` (bool), `hint`, `id` | `<x-form.field name="title" label="Judul Tiket" required><x-form.input .../></x-form.field>` |
+| **Form Input** | `<x-form.input>` | `name`, `type`, `value`, `placeholder`, `required` | `<x-form.input name="title" :value="old('title')" required />` |
+| **Form Textarea** | `<x-form.textarea>` | `name`, `rows`, `value`, `required` | `<x-form.textarea name="description" rows="4">{{ old('description') }}</x-form.textarea>` |
+| **Form Select** | `<x-form.select>` | `name`, `required` | `<x-form.select name="priority">...</x-form.select>` |
+| **Filter Tabs** | `<x-filter-tabs>` | - | Mengelompokkan item `<x-tab>` dalam `.nav .nav-pills` |
+| **Tab Item** | `<x-tab>` | `href`, `active` (bool), `count` (int/optional) | `<x-tab :href="route('tickets.index')" :active="true" :count="5">Semua</x-tab>` |
+| **Empty State** | `<x-empty-state>` | `title`, `description`, `actionText`, `actionHref` | `<x-empty-state title="Belum ada tiket" actionText="Buat Tiket" ... />` |
+| **Description List** | `<x-description-list>` | - | Bungkus `<dl class="row">` untuk detail informasi |
+| **Description Item** | `<x-description-item>`| `label`, `col` (default 'sm-4') | `<x-description-item label="Pelapor">{{ $ticket->reporter_name }}</x-description-item>` |
+| **Pagination** | `pagination/default` | Dipanggil otomatis via Laravel | `{{ $tickets->links('pagination.default') }}` |
 
 ---
 
