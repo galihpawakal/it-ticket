@@ -19,10 +19,13 @@ class TicketController extends Controller
     {
         $search = trim((string) $request->query('q', ''));
         $status = TicketStatus::tryFrom((string) $request->query('status', ''));
+        $overdue = $request->has('overdue') && $request->query('overdue') !== ''
+            ? $request->boolean('overdue')
+            : null;
 
         $tickets = Ticket::query()
             ->withCount('attachments')
-            ->filter($search, $status)
+            ->filter($search, $status, $overdue)
             ->defaultOrder()
             ->paginate(10)
             ->withQueryString();
@@ -36,6 +39,7 @@ class TicketController extends Controller
             'tickets' => $tickets,
             'search' => $search,
             'status' => $status,
+            'overdue' => $overdue,
             'counts' => $counts,
             'allCount' => $counts->sum(),
             'overdueCount' => Ticket::overdue()->count(),

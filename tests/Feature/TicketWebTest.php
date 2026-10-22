@@ -30,6 +30,17 @@ class TicketWebTest extends TestCase
         $this->get('/tickets?status=done')->assertSee('Wi-Fi putus')->assertDontSee('Printer macet');
     }
 
+    public function test_filter_terlambat_menampilkan_hanya_tiket_terlambat(): void
+    {
+        $this->makeTicket(['title' => 'Tiket Tepat Waktu', 'due_at' => now()->addDay()]);
+        $this->makeTicket(['title' => 'Tiket Terlambat Banget', 'due_at' => now()->subDay()]);
+
+        $this->get('/tickets?overdue=1')
+            ->assertOk()
+            ->assertSee('Tiket Terlambat Banget')
+            ->assertDontSee('Tiket Tepat Waktu');
+    }
+
     public function test_karakter_persen_dicari_sebagai_teks_biasa(): void
     {
         $this->makeTicket(['title' => 'Disk penuh 100%']);

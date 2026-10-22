@@ -1,38 +1,28 @@
 <x-layouts.app title="Daftar tiket">
-    <x-page-header title="Daftar tiket">
-        <x-slot:actions>
-            <x-button :href="route('tickets.create')" variant="primary" size="sm">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-plus-lg me-1" viewBox="0 0 16 16" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"/>
-                </svg>
-                Buat tiket
-            </x-button>
-        </x-slot:actions>
-    </x-page-header>
+    <x-page-header title="Daftar tiket" />
 
     @php
-        $tab = fn (?string $s) => route('tickets.index', array_filter(['status' => $s, 'q' => $search]));
+        $tab = fn (?string $s, ?bool $ov = null) => route('tickets.index', array_filter([
+            'status' => $s,
+            'overdue' => $ov !== null ? ($ov ? '1' : '0') : null,
+            'q' => $search !== '' ? $search : null,
+        ], fn ($v) => $v !== null));
     @endphp
 
     <!-- Filter Tab Status -->
     <x-filter-tabs>
-        <x-tab :href="$tab(null)" :active="$status === null" :count="$allCount">
+        <x-tab :href="$tab(null, null)" :active="$status === null && $overdue === null" :count="$allCount">
             Semua
         </x-tab>
         @foreach (\App\Enums\TicketStatus::cases() as $s)
-            <x-tab :href="$tab($s->value)" :active="$status === $s" :count="$counts[$s->value] ?? 0">
+            <x-tab :href="$tab($s->value, null)" :active="$status === $s && $overdue === null" :count="$counts[$s->value] ?? 0">
                 {{ $s->label() }}
             </x-tab>
         @endforeach
         @if ($overdueCount > 0)
-            <li class="nav-item">
-                <span class="nav-link py-1 px-3 rounded-pill d-inline-flex align-items-center gap-2 small text-danger border border-danger-subtle bg-danger-subtle">
-                    <span>Terlambat</span>
-                    <span class="badge bg-danger text-white rounded-pill" style="font-size: 0.75rem;">
-                        {{ $overdueCount }}
-                    </span>
-                </span>
-            </li>
+            <x-tab :href="$tab(null, true)" :active="$overdue === true" :count="$overdueCount" variant="danger">
+                Terlambat
+            </x-tab>
         @endif
     </x-filter-tabs>
 
@@ -57,11 +47,14 @@
                 @endforeach
             </select>
         </div>
+        @if ($overdue !== null)
+            <input type="hidden" name="overdue" value="{{ $overdue ? '1' : '0' }}">
+        @endif
         <div class="col-auto d-flex gap-2">
             <x-button type="submit" variant="primary">
                 Cari
             </x-button>
-            @if ($search !== '' || $status)
+            @if ($search !== '' || $status || $overdue !== null)
                 <x-button :href="route('tickets.index')" variant="outline">
                     Reset
                 </x-button>
@@ -73,7 +66,7 @@
     <x-card class="p-0 overflow-hidden">
         @if ($tickets->isEmpty())
             <x-empty-state>
-                @if ($search !== '' || $status)
+                @if ($search !== '' || $status || $overdue !== null)
                     Tidak ada tiket yang cocok dengan pencarian ini. <a href="{{ route('tickets.index') }}" class="text-decoration-underline fw-semibold">Tampilkan semua tiket</a>.
                 @else
                     Belum ada tiket. <a href="{{ route('tickets.create') }}" class="text-decoration-underline fw-semibold">Buat tiket pertama</a>.

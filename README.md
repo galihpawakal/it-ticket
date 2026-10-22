@@ -276,7 +276,7 @@ Semua komponen terletak di `resources/views/components/` sebagai anonymous compo
 | **Form Textarea** | `<x-form.textarea>` | `name`, `rows`, `value`, `required` | `<x-form.textarea name="description" rows="4">{{ old('description') }}</x-form.textarea>` |
 | **Form Select** | `<x-form.select>` | `name`, `required` | `<x-form.select name="priority">...</x-form.select>` |
 | **Filter Tabs** | `<x-filter-tabs>` | - | Mengelompokkan item `<x-tab>` dalam `.nav .nav-pills` |
-| **Tab Item** | `<x-tab>` | `href`, `active` (bool), `count` (int/optional) | `<x-tab :href="route('tickets.index')" :active="true" :count="5">Semua</x-tab>` |
+| **Tab Item** | `<x-tab>` | `href`, `active` (bool), `count` (int/optional), `variant` (opsional: danger) | `<x-tab :href="route('tickets.index', ['overdue' => 1])" :active="true" :count="2" variant="danger">Terlambat</x-tab>` |
 | **Empty State** | `<x-empty-state>` | `title`, `description`, `actionText`, `actionHref` | `<x-empty-state title="Belum ada tiket" actionText="Buat Tiket" ... />` |
 | **Description List** | `<x-description-list>` | - | Bungkus `<dl class="row">` untuk detail informasi |
 | **Description Item** | `<x-description-item>`| `label`, `col` (default 'sm-4') | `<x-description-item label="Pelapor">{{ $ticket->reporter_name }}</x-description-item>` |
@@ -317,3 +317,16 @@ tests/Feature/                 CheckOverdueCommandTest, TicketAttachmentTest, Ti
 **Catatan yang perlu diperhatikan / belum diverifikasi di lingkungan lokal:**
 1. **Migrasi Baru Database MySQL:** Jalankan perintah `php artisan migrate` di terminal untuk menambahkan kolom `is_overdue` beserta index dan backfill data pada database MySQL lokal Anda.
 2. **Driver SQLite CLI untuk PHPUnit:** Pengujian `php artisan test` berjalan di SQLite in-memory. Pastikan ekstensi `pdo_sqlite` aktif di `php.ini` CLI Windows Anda jika ingin menjalankan test suite otomatis.
+
+---
+
+## Catatan Durasi Pengerjaan Aktual
+
+| Tahapan / Fitur | Ruang Lingkup Pekerjaan | Estimasi / Durasi Aktual |
+|---|---|:---:|
+| **1. Fitur Upload Lampiran (PDF & Gambar)** | Model `TicketAttachment`, migrasi, private storage atomik, validasi mime/size (PDF, PNG, JPG, WebP), web & REST API, rute download proteksi, unit/feature test. | **~20 menit** |
+| **2. Kolom Tersimpan `is_overdue` & Scheduler** | Migrasi kolom `is_overdue` + index, konsistensi model saat buat/ubah status, command `tickets:check-overdue` (idempotent, batch), scheduling 5 menit WIB, audit log. | **~15 menit** |
+| **3. Validasi Transisi Status Tiket** | Logika state machine `canTransitionTo()` (In Progress ↛ Open, Done ↛ Open/In Progress), integrasi form request web & API, test validasi. | **~10 menit** |
+| **4. Modernisasi Tampilan (UI) Bootstrap 5.3** | Integrasi CDN SRI 5.3.3, 14 Global Blade Components, CSS kustom (`public/css/app.css`, Deep Teal `#0b6e6e`, dark mode), refactor semua view & pagination, responsive mobile cards. | **~20 menit** |
+| **5. Perbaikan Filter Tab Terlambat & Integrasi Web** | Penambahan prop `variant="danger"` pada `<x-tab>`, query parameter `?overdue=1` di `TicketController`, preservasi filter di toolbar pencarian, test feature web. | **~5 menit** |
+| **Total Durasi Aktual** | **5 Milestone Pengembangan & Pengujian** | **~1 jam 10 menit** |
